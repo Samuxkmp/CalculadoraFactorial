@@ -1,4 +1,4 @@
-name: Java CI with Maven and JUnit Reports
+name: Java CI with Maven, JUnit and Jacoco
 
 on:
   push:
