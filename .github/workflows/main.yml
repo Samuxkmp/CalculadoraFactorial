@@ -23,20 +23,33 @@ jobs:
     - name: Download JUnit Jupiter standalone
       run: |
         mkdir -p lib
-        wget -O lib/junit-jupiter-standalone.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.9.3/junit-platform-console-standalone-1.9.3.jar
+        wget -O lib/junit-platform-console-standalone.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.9.3/junit-platform-console-standalone-1.9.3.jar
 
-    - name: Clean previous builds
-      run: find . -name "*.class" -type f -delete
-
-    - name: Compile Java files
+    - name: List files for debugging
       run: |
-        javac -cp .:src:test:lib/junit-jupiter-standalone.jar *.java src/*.java test/*.java
+        echo "Estructura del proyecto:"
+        find . -name "*.java" -type f | head -20
+        echo "Total de archivos Java encontrados:"
+        find . -name "*.java" -type f | wc -l
 
-    - name: Run JUnit tests (JUnit 5)
+    - name: Find and compile all Java files
       run: |
-        java -jar lib/junit-jupiter-standalone.jar --class-path .:test --scan-class-path --details tree
+        # Encontrar todos los archivos Java y compilarlos
+        JAVA_FILES=$(find . -name "*.java" -type f)
+        if [ -z "$JAVA_FILES" ]; then
+          echo "No se encontraron archivos Java"
+          exit 1
+        fi
+        echo "Compilando archivos:"
+        echo "$JAVA_FILES"
+        javac -cp .:lib/junit-platform-console-standalone.jar $JAVA_FILES
+
+    - name: Run JUnit tests
+      run: |
+        # Ejecutar pruebas con detección automática
+        java -jar lib/junit-platform-console-standalone.jar --class-path . --scan-class-path --details tree
       if: success() || failure()
 
     - name: Check test results
       run: |
-        echo "Tests completed. Check logs above for results."
+        echo "Proceso de testing completado"
