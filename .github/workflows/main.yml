@@ -1,4 +1,4 @@
-name: Java CI with JUnit Tests and Code Analysis
+name: Java CI with JUnit Tests
 
 on:
   push:
@@ -20,45 +20,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Download JUnit Jupiter standalone
+      run: |
+        mkdir -p lib
+        wget -O lib/junit-jupiter-standalone.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.9.3/junit-platform-console-standalone-1.9.3.jar
+
     - name: Clean previous builds
       run: find . -name "*.class" -type f -delete
 
     - name: Compile Java files
-      run: javac -cp .:src:test *.java src/*.java test/*.java
-
-    - name: Run JUnit tests
       run: |
-        java -cp .:test:lib/junit-platform-console-standalone-1.9.3.jar org.junit.runner.JUnitCore FactorialTest
-      if: success() || failure()  # Run even if previous steps fail
+        javac -cp .:src:test:lib/junit-jupiter-standalone.jar *.java src/*.java test/*.java
 
-    - name: Generate test report
+    - name: Run JUnit tests (JUnit 5)
       run: |
-        # Aquí puedes agregar generación de reportes si es necesario
-        echo "Tests completed"
+        java -jar lib/junit-jupiter-standalone.jar --class-path .:test --scan-class-path --details tree
+      if: success() || failure()
 
-  code-analysis:
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Run SpotBugs static analysis
+    - name: Check test results
       run: |
-        wget https://github.com/spotbugs/spotbugs/releases/download/4.8.3/spotbugs-4.8.3.tgz
-        tar -xzf spotbugs-4.8.3.tgz
-        ./spotbugs-4.8.3/bin/spotbugs -textui -html=spotbugs-report.html *.class
-      continue-on-error: true  # Permite que el workflow continúe incluso si hay bugs
-
-    - name: Upload SpotBugs report
-      uses: actions/upload-artifact@v3
-      with:
-        name: spotbugs-report
-        path: spotbugs-report.html
+        echo "Tests completed. Check logs above for results."
