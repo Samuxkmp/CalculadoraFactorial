@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>factorialrecursivo</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>Factorial Recursivo</name>
+    <description>Proyecto de calculadora de factoriales con pruebas unitarias usando Maven</description>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.jupiter.version>5.9.3</junit.jupiter.version>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <javac.executable>C:\Program Files\Eclipse Adoptium\jdk-21.0.8.9-hotspot\bin\javac</javac.executable>
+    </properties>
+
+    <dependencies>
+        <!-- Dependencia JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin para compilación con Java 21 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <verbose>true</verbose>
+                    <executable>${javac.executable}</executable>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+            
+            <!-- Plugin para ejecutar pruebas con JUnit 5 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <printSummary>true</printSummary>
+                    <redirectTestOutputToFile>false</redirectTestOutputToFile>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
