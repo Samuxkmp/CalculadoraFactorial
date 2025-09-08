@@ -1,5 +1,0 @@
-# Created at 2025-09-07T20:29:17.141
-Boot Manifest-JAR contains absolute paths in classpath 'D:\Universidad\Materias de Posgrado\Construccion y Pruebas de Software I\Factorial con recursividad\factorialrecursivo\target\test-classes'
-Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-'other' has different root
-

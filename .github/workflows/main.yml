@@ -1,0 +1,64 @@
+name: Java CI with JUnit Tests and Code Analysis
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Clean previous builds
+      run: find . -name "*.class" -type f -delete
+
+    - name: Compile Java files
+      run: javac -cp .:src:test *.java src/*.java test/*.java
+
+    - name: Run JUnit tests
+      run: |
+        java -cp .:test:lib/junit-platform-console-standalone-1.9.3.jar org.junit.runner.JUnitCore FactorialTest
+      if: success() || failure()  # Run even if previous steps fail
+
+    - name: Generate test report
+      run: |
+        # Aquí puedes agregar generación de reportes si es necesario
+        echo "Tests completed"
+
+  code-analysis:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Run SpotBugs static analysis
+      run: |
+        wget https://github.com/spotbugs/spotbugs/releases/download/4.8.3/spotbugs-4.8.3.tgz
+        tar -xzf spotbugs-4.8.3.tgz
+        ./spotbugs-4.8.3/bin/spotbugs -textui -html=spotbugs-report.html *.class
+      continue-on-error: true  # Permite que el workflow continúe incluso si hay bugs
+
+    - name: Upload SpotBugs report
+      uses: actions/upload-artifact@v3
+      with:
+        name: spotbugs-report
+        path: spotbugs-report.html
