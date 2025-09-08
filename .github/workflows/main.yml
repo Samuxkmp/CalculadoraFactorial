@@ -1,130 +1,44 @@
-name: Java CI with JUnit Tests and Reporting
+name: Java CI with Maven
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
+        distribution: temurin
         java-version: '17'
-        distribution: 'temurin'
 
-    - name: Download JUnit Jupiter standalone
-      run: |
-        mkdir -p lib
-        wget -O lib/junit-platform-console-standalone.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.9.3/junit-platform-console-standalone-1.9.3.jar
-
-    - name: List Java files for reference
-      run: |
-        echo "📁 ARCHIVOS JAVA ENCONTRADOS EN EL PROYECTO:"
-        echo "=============================================="
-        find . -name "*.java" -type f | while read file; do
-          echo "• $file"
-        done
-        echo "=============================================="
-        echo "Total: $(find . -name "*.java" -type f | wc -l) archivos Java"
-
-    - name: Compile all Java files
-      run: |
-        # Compilar todos los archivos Java encontrados
-        JAVA_FILES=$(find . -name "*.java" -type f)
-        if [ -z "$JAVA_FILES" ]; then
-          echo "❌ ERROR: No se encontraron archivos Java para compilar"
-          exit 1
-        fi
-        
-        echo "🛠️ Compilando archivos Java..."
-        javac -cp .:lib/junit-platform-console-standalone.jar $JAVA_FILES
-        
-        if [ $? -eq 0 ]; then
-          echo "✅ Compilación exitosa"
-        else
-          echo "❌ Error en la compilación"
-          exit 1
-        fi
-
-    - name: Run JUnit tests with detailed report
-      run: |
-        echo "🧪 EJECUTANDO PRUEBAS JUNIT:"
-        echo "=============================="
-        
-        # Crear directorio para resultados
-        mkdir -p test-results
-        
-        # Ejecutar pruebas y guardar resultados en un archivo
-        java -jar lib/junit-platform-console-standalone.jar \
-          --class-path . \
-          --scan-class-path \
-          --details summary \
-          --details-theme ascii \
-          --reports-dir test-results \
-          > test-output.txt 2>&1 || true
-        
-        # Mostrar resultados en consola
-        cat test-output.txt
-        
-        # Crear reporte resumido
-        echo "📊 REPORTE DE PRUEBAS:"
-        echo "======================"
-        
-        # Extraer estadísticas
-        TESTS_RUN=$(grep -oP '[0-9]+ tests found' test-output.txt | grep -oP '[0-9]+' || echo "0")
-        TESTS_SUCCEEDED=$(grep -oP '[0-9]+ tests successful' test-output.txt | grep -oP '[0-9]+' || echo "0")
-        TESTS_FAILED=$(grep -oP '[0-9]+ tests failed' test-output.txt | grep -oP '[0-9]+' || echo "0")
-        TESTS_SKIPPED=$(grep -oP '[0-9]+ tests skipped' test-output.txt | grep -oP '[0-9]+' || echo "0")
-        
-        echo "Pruebas encontradas: ${TESTS_RUN:-0}"
-        echo "Pruebas exitosas: ${TESTS_SUCCEEDED:-0}"
-        echo "Pruebas fallidas: ${TESTS_FAILED:-0}"
-        echo "Pruebas omitidas: ${TESTS_SKIPPED:-0}"
-        echo ""
-        
-        # Mostrar pruebas fallidas si hay alguna
-        if [ "${TESTS_FAILED:-0}" -gt 0 ]; then
-          echo "❌ PRUEBAS FALLIDAS:"
-          echo "-------------------"
-          grep -A 10 -B 2 "FAILED" test-output.txt || echo "No se pudieron obtener detalles de las fallas"
-        fi
-        
-        # Mostrar resumen final
-        if [ "${TESTS_FAILED:-0}" -eq 0 ] && [ "${TESTS_RUN:-0}" -gt 0 ]; then
-          echo "🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE!"
-        elif [ "${TESTS_RUN:-0}" -eq 0 ]; then
-          echo "⚠️  No se encontraron pruebas para ejecutar"
-        else
-          echo "❌ Algunas pruebas fallaron"
-        fi
-
-    - name: Upload test results as artifact
-      uses: actions/upload-artifact@v4
+    - name: Cache Maven packages
+      uses: actions/cache@v3
       with:
-        name: test-results
-        path: |
-          test-output.txt
-          test-results/
-        if-no-files-found: warn
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
 
-    - name: Set test status
-      run: |
-        # Verificar si hubo pruebas fallidas
-        if grep -q "tests failed" test-output.txt && ! grep -q "0 tests failed" test-output.txt; then
-          echo "❌ Algunas pruebas fallaron"
-          exit 1
-        elif ! grep -q "tests found" test-output.txt; then
-          echo "⚠️  No se encontraron pruebas para ejecutar"
-          exit 0
-        else
-          echo "✅ Todas las pruebas pasaron exitosamente"
-          exit 0
-        fi
+    - name: Build with Maven
+      run: mvn clean compile
+
+    - name: Run tests with Maven
+      run: mvn test
+
+    - name: Archive test reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: junit-reports
+        path: target/surefire-reports/
