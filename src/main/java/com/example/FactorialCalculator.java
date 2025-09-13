@@ -10,7 +10,7 @@ public class FactorialCalculator {
         if (b.equals(BigInteger.ZERO)) {
             return BigInteger.ZERO;
         }
-        if (b.equals(BigInteger.ONE)) {
+        if (b.equals(BigInteger.ONE)) { 
             return a;
         }
 
