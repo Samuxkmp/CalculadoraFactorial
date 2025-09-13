@@ -3,7 +3,7 @@ package com.example;
 import java.math.BigInteger;
 import java.util.Scanner;
 
-public class FactorialCalculator {
+public class FactorialCalculator { 
 
     // Multiplicación recursiva optimizada usando división CON MANEJO DE SIGNOS
     public static BigInteger multiplicar(BigInteger a, BigInteger b) {
